@@ -6,68 +6,83 @@
     <title>Sensory Games Fun! - Spectrum Bridge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* --- CSS Logo Styles --- */
-      .logo-container {
-        display: flex; /* Use flexbox to align logo segments */
-        justify-content: center; /* Center the logo segments horizontally */
-        align-items: flex-end; /* Align segments to the bottom */
-        height: 50px; /* Define height for the logo area */
-        margin-bottom: 1rem; /* Space below the logo */
-      }
-      .logo-segment {
-        width: 12px; /* Width of each segment */
-        margin: 0 2px; /* Space between segments */
-        border-radius: 4px 4px 0 0; /* Rounded top corners */
-        background-color: #ccc; /* Default background */
-        transition: height 0.3s ease; /* Smooth transition for potential hover effects */
-      }
-      /* Define heights and colors for each segment to create an arch/bridge shape */
-      .segment-1 { height: 25px; background-color: #a78bfa; } /* brand-purple */
-      .segment-2 { height: 35px; background-color: #8b5cf6; } /* Slightly darker purple */
-      .segment-3 { height: 45px; background-color: #60a5fa; } /* brand-blue */
-      .segment-4 { height: 35px; background-color: #3b82f6; } /* Slightly darker blue */
-      .segment-5 { height: 25px; background-color: #2dd4bf; } /* Teal color */
-      /* --- End CSS Logo Styles --- */
+     /* --- CSS Logo Styles --- */
+     .logo-container {
+       display: flex; /* Use flexbox to align logo segments */
+       justify-content: center; /* Center the logo segments horizontally */
+       align-items: flex-end; /* Align segments to the bottom */
+       height: 50px; /* Define height for the logo area */
+       margin-bottom: 1rem; /* Space below the logo */
+     }
+     .logo-segment {
+       width: 12px; /* Width of each segment */
+       margin: 0 2px; /* Space between segments */
+       border-radius: 4px 4px 0 0; /* Rounded top corners */
+       background-color: #ccc; /* Default background */
+       transition: height 0.3s ease; /* Smooth transition for potential hover effects */
+     }
+     /* Define heights and colors for each segment to create an arch/bridge shape */
+     .segment-1 { height: 25px; background-color: #a78bfa; } /* brand-purple */
+     .segment-2 { height: 35px; background-color: #8b5cf6; } /* Slightly darker purple */
+     .segment-3 { height: 45px; background-color: #60a5fa; } /* brand-blue */
+     .segment-4 { height: 35px; background-color: #3b82f6; } /* Slightly darker blue */
+     .segment-5 { height: 25px; background-color: #2dd4bf; } /* Teal color */
+     /* --- End CSS Logo Styles --- */
 
-      /* --- Custom CSS Icons --- */
-      .css-icon {
+     /* --- Custom CSS Icons --- */
+     .css-icon {
          display: inline-block;
-         width: 1.25em; /* Match size roughly with previous icons */
+         width: 1.25em; /* Base size */
          height: 1.25em;
          margin-right: 0.5rem; /* Space between icon and text */
          vertical-align: middle; /* Align with text */
          position: relative; /* Needed for pseudo-elements if used */
-      }
+         box-sizing: border-box; /* Include border/padding in size */
+     }
 
-      /* Bubble Icon */
-      .icon-bubble {
-        border-radius: 50%; /* Make it round */
-        background: radial-gradient(circle at 30% 30%, #ffffffcc, #ffffff00 70%), #a78bfa; /* Light purple with a shine */
-        border: 1px solid #c4b5fd; /* Lighter border */
-        box-shadow: inset 0 0 3px #ffffff80; /* Inner glow */
-      }
+     /* Bubble Icon - Updated with Half Blue / Half Red Split */
+     .icon-bubble {
+       border-radius: 50%; /* Make it round */
+       /* Background: White shine overlay + Half Blue / Half Red base */
+       background:
+         radial-gradient(circle at 30% 30%, #ffffffcc, #ffffff00 70%), /* Shine effect */
+         linear-gradient(to right, #60a5fa 50%, #f87171 50%); /* Vertical split: Blue (#60a5fa) | Red (#f87171) */
+       box-shadow: inset 0 0 3px #ffffff80; /* Inner glow */
+     }
 
-      /* Alphabet Icon (Letter 'A') */
-      .icon-alphabet {
-        /* Using borders to create the shape */
-        width: 0;
-        height: 0;
-        border-left: 0.625em solid transparent; /* Half base */
-        border-right: 0.625em solid transparent; /* Half base */
-        border-bottom: 1.1em solid #60a5fa; /* Height and color (brand-blue) */
-        position: relative; /* For positioning the crossbar */
-        margin-top: 0.075em; /* Adjust vertical alignment */
-      }
-      .icon-alphabet::after {
-        content: '';
-        position: absolute;
-        left: -0.3em; /* Position crossbar */
-        bottom: 0.3em; /* Position crossbar */
-        height: 0.15em; /* Thickness of crossbar */
-        width: 0.6em; /* Width of crossbar */
-        background-color: #374151; /* Use card background for contrast */
-      }
-      /* --- End Custom CSS Icons --- */
+     /* Alphabet Icon (Letter 'A') - No longer used in HTML but kept for reference */
+     .icon-alphabet {
+       /* Using borders to create the shape */
+       width: 0;
+       height: 0;
+       border-left: 0.625em solid transparent; /* Half base */
+       border-right: 0.625em solid transparent; /* Half base */
+       border-bottom: 1.1em solid #60a5fa; /* Height and color (brand-blue) */
+       position: relative; /* For positioning the crossbar */
+       margin-top: 0.075em; /* Adjust vertical alignment */
+     }
+     .icon-alphabet::after {
+       content: '';
+       position: absolute;
+       left: -0.3em; /* Position crossbar */
+       bottom: 0.3em; /* Position crossbar */
+       height: 0.15em; /* Thickness of crossbar */
+       width: 0.6em; /* Width of crossbar */
+       background-color: #374151; /* Use card background for contrast */
+     }
+
+     /* Comet Icon */
+     .icon-comet {
+         /* Inherit base alignment from .css-icon */
+         width: 1.5em; /* Slightly wider to show gradient */
+         height: 0.75em; /* Maintain aspect ratio roughly */
+         /* Gradient: Transparent -> White head -> Purple tail (using theme color) */
+         background: linear-gradient(to left, transparent, #ffffffcc, #a78bfa);
+         border-radius: 50% / 50%; /* Elliptical shape */
+         box-shadow: 0 0 4px #fff, 0 0 6px #a78bfa; /* Smaller glow */
+         margin-top: 0.25em; /* Adjust vertical alignment slightly */
+     }
+     /* --- End Custom CSS Icons --- */
 
     </style>
     <script>
@@ -79,11 +94,11 @@
                         sans: ['Inter', 'sans-serif'], // Use Inter font
                     },
                     colors: {
-                        'brand-blue': '#60a5fa',    // Keep blue for accent
+                        'brand-blue': '#60a5fa',   // Keep blue for accent
                         'brand-purple': '#a78bfa', // Keep purple for accent
-                        'dark-bg': '#1f2937',      // Dark background (gray-800)
-                        'dark-card': '#374151',    // Slightly lighter card background (gray-700)
-                        'light-text': '#f3f4f6',   // Light text for contrast (gray-100)
+                        'dark-bg': '#1f2937',     // Dark background (gray-800)
+                        'dark-card': '#374151',   // Slightly lighter card background (gray-700)
+                        'light-text': '#f3f4f6',  // Light text for contrast (gray-100)
                         'medium-text': '#9ca3af', // Medium text for subtitles (gray-400)
                     },
                     boxShadow: {
@@ -125,8 +140,8 @@
 
             <a href="/ved-games/comet-alphabet-pop.html"
                class="flex items-center justify-center bg-gradient-to-r from-brand-purple to-purple-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg hover:from-brand-purple hover:to-purple-600 transition duration-300 ease-in-out transform hover:-translate-y-1">
-                 <span class="css-icon icon-alphabet"></span>
-                Comet alphabet pop
+                 <span class="css-icon icon-comet"></span>
+                 Comet alphabet pop
             </a>
 
             </section>
