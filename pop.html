@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bubble Popper Game</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script> <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         body {
@@ -27,8 +26,7 @@
             background-color: #0f0f1f; /* Darker canvas background */
             display: block; /* Remove extra space below canvas */
             max-width: 95vw; /* Limit canvas width */
-            /* Further reduced max-height */
-            max-height: 75vh; /* Was 80vh */
+            max-height: 75vh; /* Keep reduced max-height */
             aspect-ratio: 16 / 9; /* Maintain aspect ratio */
             border-radius: 1rem; /* Rounded corners */
             cursor: crosshair; /* Indicate clickable area */
@@ -183,6 +181,7 @@
         let gameActive = false;
         const bubbleRadius = 15;
         const bubbleSpeed = 1;
+        const clickRadiusBuffer = 4; // Pixels to add to click radius for easier popping
 
         // Timer variables
         let timerInterval = null;
@@ -285,7 +284,8 @@
             isClicked(clickX, clickY) {
                 if (this.popped) return false;
                 const distance = Math.sqrt(Math.pow(clickX - this.x, 2) + Math.pow(clickY - this.y, 2));
-                return distance < this.radius;
+                // Check if distance is within the visual radius PLUS the buffer
+                return distance < (this.radius + clickRadiusBuffer);
             }
         }
 
@@ -324,7 +324,6 @@
          function resizeCanvas() {
             const container = canvas.parentElement;
             const maxWidth = container.clientWidth * 0.98;
-            // Use the updated max-height from CSS
             const maxHeight = window.innerHeight * 0.75; // Corresponds to 75vh
             const aspectRatio = 16 / 9;
             let newWidth = maxWidth;
@@ -494,6 +493,7 @@
 
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 const bubble = bubbles[i];
+                // Use the modified isClicked method
                 if (!bubble.popped && bubble.isClicked(clickX, clickY)) {
                     bubbleHit = true;
                     if (bubble.color === targetColor) {
