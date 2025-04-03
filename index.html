@@ -6,6 +6,7 @@
     <title>Bubble Popper Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         body {
             font-family: 'Press Start 2P', cursive; /* Apply game font */
@@ -18,16 +19,18 @@
             color: #e0e0e0; /* Light text */
             margin: 0;
             overflow: hidden; /* Prevent scrollbars */
+            /* Improve touch behavior on mobile */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         #gameCanvas {
-            /* border: 3px solid #4a4a8a; */ /* Removed border */
             background-color: #0f0f1f; /* Darker canvas background */
             display: block; /* Remove extra space below canvas */
             max-width: 95vw; /* Limit canvas width */
             max-height: 70vh; /* Limit canvas height */
             aspect-ratio: 16 / 9; /* Maintain aspect ratio */
             border-radius: 1rem; /* Rounded corners */
-            /* box-shadow: 0 0 15px rgba(74, 74, 138, 0.7); */ /* Removed box-shadow */
+            cursor: crosshair; /* Indicate clickable area */
         }
         .game-info {
              display: flex;
@@ -164,7 +167,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const messageArea = document.getElementById('messageArea');
-        const timerArea = document.getElementById('timerArea'); // Timer display element
+        const timerArea = document.getElementById('timerArea');
         const chooseBlueButton = document.getElementById('chooseBlue');
         const chooseRedButton = document.getElementById('chooseRed');
         const resetButton = document.getElementById('resetGame');
@@ -173,10 +176,10 @@
         const modalPlayAgainButton = document.getElementById('modalPlayAgain');
 
         let bubbles = [];
-        let targetColor = null; // 'blue' or 'red'
+        let targetColor = null;
         let animationId = null;
         let gameActive = false;
-        const numBubblesPerColor = 15; // Number of bubbles for each color
+        const numBubblesPerColor = 15;
         const bubbleRadius = 15;
         const bubbleSpeed = 1;
 
@@ -185,38 +188,84 @@
         let startTime = null;
         let elapsedTime = 0;
 
+        // --- Audio Setup ---
+        let positiveSynth = null;
+        let buzzerSynth = null;
+        let audioInitialized = false;
+
+        // Function to initialize Tone.js audio context and synths
+        async function initializeAudio() {
+            if (audioInitialized) return;
+            try {
+                await Tone.start();
+                console.log("Audio context started!");
+                positiveSynth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.1, release: 0.1 }
+                }).toDestination();
+                buzzerSynth = new Tone.Synth({
+                    oscillator: { type: 'square' },
+                    envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.1 }
+                }).toDestination();
+                audioInitialized = true;
+            } catch (e) {
+                console.error("Could not start audio context:", e);
+                messageArea.textContent = "Audio disabled. Click again?";
+            }
+        }
+
+        // Function to play the positive sound
+        function playPositiveSound() {
+            if (positiveSynth) {
+                positiveSynth.triggerAttackRelease("C5", "8n");
+            }
+            // --- Haptic Feedback ---
+            // Vibrate briefly for correct pop (if supported)
+            if (navigator.vibrate) {
+                navigator.vibrate(50); // 50ms vibration
+            }
+        }
+
+        // Function to play the buzzer sound
+        function playBuzzerSound() {
+             if (buzzerSynth) {
+                buzzerSynth.triggerAttackRelease("F#2", "16n");
+            }
+             // --- Haptic Feedback ---
+             // Vibrate longer for incorrect pop or miss (if supported)
+             if (navigator.vibrate) {
+                navigator.vibrate(100); // 100ms vibration
+            }
+        }
+
+
         // --- Bubble Class ---
         class Bubble {
-            constructor(x, y, radius, color, dx, dy) {
+             constructor(x, y, radius, color, dx, dy) {
                 this.x = x;
                 this.y = y;
                 this.radius = radius;
                 this.color = color;
-                this.dx = dx; // Horizontal speed
-                this.dy = dy; // Vertical speed
+                this.dx = dx;
+                this.dy = dy;
                 this.popped = false;
             }
 
             draw() {
-                if (this.popped) return; // Don't draw popped bubbles
-
+                if (this.popped) return;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-
-                // Create a gradient for a 3D effect
                 const gradient = ctx.createRadialGradient(
-                    this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1, // Inner circle (highlight)
-                    this.x, this.y, this.radius // Outer circle
+                    this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1,
+                    this.x, this.y, this.radius
                 );
-
                 if (this.color === 'blue') {
-                    gradient.addColorStop(0, 'rgba(173, 216, 230, 0.9)'); // Lighter blue highlight
-                    gradient.addColorStop(1, 'rgba(0, 0, 255, 0.8)');   // Main blue color
-                } else { // red
-                    gradient.addColorStop(0, 'rgba(255, 182, 193, 0.9)'); // Lighter red highlight
-                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0.8)');     // Main red color
+                    gradient.addColorStop(0, 'rgba(173, 216, 230, 0.9)');
+                    gradient.addColorStop(1, 'rgba(0, 0, 255, 0.8)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(255, 182, 193, 0.9)');
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0.8)');
                 }
-
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 ctx.closePath();
@@ -224,18 +273,14 @@
 
             update() {
                  if (this.popped) return;
-
-                // Move the bubble
                 this.x += this.dx;
                 this.y += this.dy;
-
-                // Collision detection with canvas walls
                 if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-                    this.dx = -this.dx; // Reverse horizontal direction
+                    this.dx = -this.dx;
                     this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
                 }
                 if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
-                    this.dy = -this.dy; // Reverse vertical direction
+                    this.dy = -this.dy;
                     this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
                 }
             }
@@ -250,20 +295,20 @@
         // --- Timer Functions ---
         function updateTimer() {
             if (!gameActive || !startTime) return;
-            elapsedTime = (Date.now() - startTime) / 1000; // Calculate elapsed seconds
+            elapsedTime = (Date.now() - startTime) / 1000;
             updateTimerDisplay();
         }
 
         function updateTimerDisplay() {
-             timerArea.textContent = `Time: ${elapsedTime.toFixed(1)}s`; // Display time with one decimal place
+             timerArea.textContent = `Time: ${elapsedTime.toFixed(1)}s`;
         }
 
         function startTimer() {
             elapsedTime = 0;
             startTime = Date.now();
-            if (timerInterval) clearInterval(timerInterval); // Clear previous interval if any
-            timerInterval = setInterval(updateTimer, 100); // Update timer every 100ms (0.1s)
-            updateTimerDisplay(); // Show 0.0s immediately
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+            updateTimerDisplay();
         }
 
         function stopTimer() {
@@ -271,29 +316,27 @@
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
-            // Update display one last time to ensure accuracy
              if (startTime) {
                 elapsedTime = (Date.now() - startTime) / 1000;
                 updateTimerDisplay();
             }
         }
 
+
         // --- Game Functions ---
-        function resizeCanvas() {
+         function resizeCanvas() {
             const container = canvas.parentElement;
             const maxWidth = container.clientWidth * 0.95;
-            const maxHeight = window.innerHeight * 0.65; // Adjusted max height slightly for info/controls
+            const maxHeight = window.innerHeight * 0.65;
             const aspectRatio = 16 / 9;
             let newWidth = maxWidth;
             let newHeight = newWidth / aspectRatio;
-
             if (newHeight > maxHeight) {
                 newHeight = maxHeight;
                 newWidth = newHeight * aspectRatio;
             }
             canvas.width = Math.floor(newWidth);
             canvas.height = Math.floor(newHeight);
-
              if (bubbles.length > 0 && gameActive) {
                 drawBubbles();
             }
@@ -330,51 +373,45 @@
 
         function gameLoop() {
             if (!gameActive) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             updateBubbles();
             drawBubbles();
-            // No need to check win condition here, it's checked after a pop
-
             animationId = requestAnimationFrame(gameLoop);
         }
 
          function checkWinCondition() {
-            if (!targetColor || !gameActive) return; // Only check during active game
-
+            if (!targetColor || !gameActive) return;
             const remainingTargetBubbles = bubbles.filter(bubble => bubble.color === targetColor && !bubble.popped).length;
-            messageArea.textContent = `Pop ${targetColor}! Left: ${remainingTargetBubbles}`; // Updated message
-
+            messageArea.textContent = `Pop ${targetColor}! Left: ${remainingTargetBubbles}`;
             if (remainingTargetBubbles === 0) {
-                endGame(true); // Player wins
+                endGame(true);
             }
         }
 
         function startGame(color) {
             if (gameActive) return;
-
+            initializeAudio();
             targetColor = color;
             gameActive = true;
             messageArea.textContent = `Pop all the ${targetColor} bubbles!`;
             chooseBlueButton.style.display = 'none';
             chooseRedButton.style.display = 'none';
             resetButton.style.display = 'inline-block';
-
             resizeCanvas();
             initBubbles();
-            startTimer(); // Start the timer
+            checkWinCondition();
+            startTimer();
             if (animationId) cancelAnimationFrame(animationId);
             gameLoop();
         }
 
          function endGame(playerWon) {
             gameActive = false;
-            stopTimer(); // Stop the timer
+            stopTimer();
             if (animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
-            // Update modal message with final time
             modalMessage.textContent = playerWon ? `You Win! Time: ${elapsedTime.toFixed(1)}s` : "Game Over!";
             gameOverModal.style.display = 'flex';
             resetButton.style.display = 'none';
@@ -383,11 +420,10 @@
         function resetGame() {
             gameActive = false;
             targetColor = null;
-            stopTimer(); // Stop timer
+            stopTimer();
             startTime = null;
             elapsedTime = 0;
-             updateTimerDisplay(); // Reset timer display to 0.0s
-
+             updateTimerDisplay();
             if (animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
@@ -395,7 +431,7 @@
             bubbles = [];
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             messageArea.textContent = 'Choose a color to pop!';
-            timerArea.textContent = 'Time: 0.0s'; // Reset timer text
+            timerArea.textContent = 'Time: 0.0s';
             chooseBlueButton.style.display = 'inline-block';
             chooseRedButton.style.display = 'inline-block';
             resetButton.style.display = 'none';
@@ -403,33 +439,45 @@
         }
 
         // --- Event Listeners ---
-        chooseBlueButton.addEventListener('click', () => startGame('blue'));
-        chooseRedButton.addEventListener('click', () => startGame('red'));
+        chooseBlueButton.addEventListener('click', () => {
+            initializeAudio();
+            startGame('blue');
+        });
+        chooseRedButton.addEventListener('click', () => {
+             initializeAudio();
+            startGame('red');
+        });
         resetButton.addEventListener('click', resetGame);
         modalPlayAgainButton.addEventListener('click', resetGame);
 
         canvas.addEventListener('click', (event) => {
+            if (!audioInitialized) {
+                initializeAudio();
+            }
             if (!gameActive || !targetColor) return;
 
             const rect = canvas.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
             const clickY = event.clientY - rect.top;
+            let bubbleHit = false;
 
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 const bubble = bubbles[i];
                 if (!bubble.popped && bubble.isClicked(clickX, clickY)) {
+                    bubbleHit = true;
                     if (bubble.color === targetColor) {
                         bubble.popped = true;
-                        checkWinCondition(); // Check win condition *after* popping
+                        playPositiveSound(); // Plays sound and triggers haptics
+                        checkWinCondition();
                     } else {
-                         messageArea.textContent = `Oops! Pop ${targetColor} bubbles.`;
-                         // Keep timer running, but reset message after delay
-                         setTimeout(() => {
-                             if(gameActive) checkWinCondition(); // Re-display remaining count
-                         }, 1500);
+                        playBuzzerSound(); // Plays sound and triggers haptics
                     }
                     break;
                 }
+            }
+
+            if (!bubbleHit) {
+                playBuzzerSound(); // Plays sound and triggers haptics for miss
             }
         });
 
@@ -439,7 +487,11 @@
         window.onload = () => {
             resizeCanvas();
             messageArea.textContent = 'Choose a color to pop!';
-            timerArea.textContent = 'Time: 0.0s'; // Initial timer text
+            timerArea.textContent = 'Time: 0.0s';
+            // Check for vibrate support (optional logging)
+            if (!navigator.vibrate) {
+                console.log("Vibration API not supported on this browser/device.");
+            }
         };
 
     </script>
