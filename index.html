@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensory Games Fun! - Spectrum Bridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* --- CSS Logo Styles --- */
+      .logo-container {
+        display: flex; /* Use flexbox to align logo segments */
+        justify-content: center; /* Center the logo segments horizontally */
+        align-items: flex-end; /* Align segments to the bottom */
+        height: 50px; /* Define height for the logo area */
+        margin-bottom: 1rem; /* Space below the logo */
+      }
+      .logo-segment {
+        width: 12px; /* Width of each segment */
+        margin: 0 2px; /* Space between segments */
+        border-radius: 4px 4px 0 0; /* Rounded top corners */
+        background-color: #ccc; /* Default background */
+        transition: height 0.3s ease; /* Smooth transition for potential hover effects */
+      }
+      /* Define heights and colors for each segment to create an arch/bridge shape */
+      .segment-1 { height: 25px; background-color: #a78bfa; } /* brand-purple */
+      .segment-2 { height: 35px; background-color: #8b5cf6; } /* Slightly darker purple */
+      .segment-3 { height: 45px; background-color: #60a5fa; } /* brand-blue */
+      .segment-4 { height: 35px; background-color: #3b82f6; } /* Slightly darker blue */
+      .segment-5 { height: 25px; background-color: #2dd4bf; } /* Teal color */
+      /* --- End CSS Logo Styles --- */
+
+      /* --- Custom CSS Icons --- */
+      .css-icon {
+         display: inline-block;
+         width: 1.25em; /* Match size roughly with previous icons */
+         height: 1.25em;
+         margin-right: 0.5rem; /* Space between icon and text */
+         vertical-align: middle; /* Align with text */
+         position: relative; /* Needed for pseudo-elements if used */
+      }
+
+      /* Bubble Icon */
+      .icon-bubble {
+        border-radius: 50%; /* Make it round */
+        background: radial-gradient(circle at 30% 30%, #ffffffcc, #ffffff00 70%), #a78bfa; /* Light purple with a shine */
+        border: 1px solid #c4b5fd; /* Lighter border */
+        box-shadow: inset 0 0 3px #ffffff80; /* Inner glow */
+      }
+
+      /* Alphabet Icon (Letter 'A') */
+      .icon-alphabet {
+        /* Using borders to create the shape */
+        width: 0;
+        height: 0;
+        border-left: 0.625em solid transparent; /* Half base */
+        border-right: 0.625em solid transparent; /* Half base */
+        border-bottom: 1.1em solid #60a5fa; /* Height and color (brand-blue) */
+        position: relative; /* For positioning the crossbar */
+        margin-top: 0.075em; /* Adjust vertical alignment */
+      }
+      .icon-alphabet::after {
+        content: '';
+        position: absolute;
+        left: -0.3em; /* Position crossbar */
+        bottom: 0.3em; /* Position crossbar */
+        height: 0.15em; /* Thickness of crossbar */
+        width: 0.6em; /* Width of crossbar */
+        background-color: #374151; /* Use card background for contrast */
+      }
+      /* --- End Custom CSS Icons --- */
+
+    </style>
+    <script>
+        // Basic Tailwind config for Dark Theme
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'], // Use Inter font
+                    },
+                    colors: {
+                        'brand-blue': '#60a5fa',    // Keep blue for accent
+                        'brand-purple': '#a78bfa', // Keep purple for accent
+                        'dark-bg': '#1f2937',      // Dark background (gray-800)
+                        'dark-card': '#374151',    // Slightly lighter card background (gray-700)
+                        'light-text': '#f3f4f6',   // Light text for contrast (gray-100)
+                        'medium-text': '#9ca3af', // Medium text for subtitles (gray-400)
+                    },
+                    boxShadow: {
+                        'soft-dark': '0 4px 14px 0 rgba(0, 0, 0, 0.2)', // Adjusted shadow for dark bg
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg font-sans flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-dark-card rounded-xl shadow-soft-dark p-8 md:p-12 max-w-2xl w-full text-center">
+
+        <header class="mb-8">
+            <div class="logo-container">
+                <div class="logo-segment segment-1"></div>
+                <div class="logo-segment segment-2"></div>
+                <div class="logo-segment segment-3"></div>
+                <div class="logo-segment segment-4"></div>
+                <div class="logo-segment segment-5"></div>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-light-text mb-2">
+                Welcome to Focus Lab!
+            </h1>
+            <p class="text-medium-text text-lg">
+                Fun, calming games that help children improve visual attention.
+            </p>
+        </header>
+
+        <section class="space-y-4">
+            <h2 class="text-2xl font-semibold text-light-text mb-6">Choose a Game:</h2>
+
+            <a href="/pop.html"
+               class="flex items-center justify-center bg-gradient-to-r from-brand-blue to-blue-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg hover:from-brand-blue hover:to-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1">
+                <span class="css-icon icon-bubble"></span>
+                Bubble Popper
+            </a>
+
+            <a href="/alpha.html"
+               class="flex items-center justify-center bg-gradient-to-r from-brand-purple to-purple-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg hover:from-brand-purple hover:to-purple-600 transition duration-300 ease-in-out transform hover:-translate-y-1">
+                 <span class="css-icon icon-alphabet"></span>
+                Alphabet Pop
+            </a>
+
+            </section>
+
+        <footer class="mt-12 text-medium-text text-sm">
+            <p>&copy; 2025 Spectrum Bridge, Shar and Ashwin. All rights reserved.</p>
+            <p>Built with love for learning and fun.</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
