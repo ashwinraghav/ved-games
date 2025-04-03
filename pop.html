@@ -27,10 +27,12 @@
             background-color: #0f0f1f; /* Darker canvas background */
             display: block; /* Remove extra space below canvas */
             max-width: 95vw; /* Limit canvas width */
-            max-height: 70vh; /* Limit canvas height */
+            /* Increased max-height to use more vertical space */
+            max-height: 85vh; /* Was 70vh */
             aspect-ratio: 16 / 9; /* Maintain aspect ratio */
             border-radius: 1rem; /* Rounded corners */
             cursor: crosshair; /* Indicate clickable area */
+            margin-bottom: 10px; /* Add a little space below canvas */
         }
         .game-info {
              display: flex;
@@ -38,7 +40,7 @@
              align-items: center;
              width: 100%; /* Take full width of container */
              max-width: 600px; /* Limit width */
-             margin-top: 15px;
+             margin-top: 5px; /* Reduced margin-top */
              padding: 0 10px; /* Add some padding */
              min-height: 2em; /* Reserve space */
         }
@@ -53,7 +55,7 @@
             text-align: right;
         }
         .game-controls {
-            margin-top: 20px;
+            margin-top: 10px; /* Reduced margin-top */
             display: flex;
             gap: 15px; /* Space between buttons */
             align-items: center;
@@ -139,9 +141,7 @@
 </head>
 <body>
 
-    <h1 class="text-3xl font-bold mb-4 text-center">Bubble Popper!</h1>
-
-    <canvas id="gameCanvas"></canvas>
+    <h1 class="text-3xl font-bold mb-2 text-center">Bubble Popper!</h1> <canvas id="gameCanvas"></canvas>
 
     <div class="game-info">
         <div id="messageArea">Choose a color to pop!</div>
@@ -179,7 +179,6 @@
         let targetColor = null;
         let animationId = null;
         let gameActive = false;
-        const numBubblesPerColor = 15;
         const bubbleRadius = 15;
         const bubbleSpeed = 1;
 
@@ -219,10 +218,8 @@
             if (positiveSynth) {
                 positiveSynth.triggerAttackRelease("C5", "8n");
             }
-            // --- Haptic Feedback ---
-            // Vibrate briefly for correct pop (if supported)
             if (navigator.vibrate) {
-                navigator.vibrate(50); // 50ms vibration
+                navigator.vibrate(50);
             }
         }
 
@@ -231,10 +228,8 @@
              if (buzzerSynth) {
                 buzzerSynth.triggerAttackRelease("F#2", "16n");
             }
-             // --- Haptic Feedback ---
-             // Vibrate longer for incorrect pop or miss (if supported)
              if (navigator.vibrate) {
-                navigator.vibrate(100); // 100ms vibration
+                navigator.vibrate(100);
             }
         }
 
@@ -326,8 +321,10 @@
         // --- Game Functions ---
          function resizeCanvas() {
             const container = canvas.parentElement;
-            const maxWidth = container.clientWidth * 0.95;
-            const maxHeight = window.innerHeight * 0.65;
+            // Use slightly more width available
+            const maxWidth = container.clientWidth * 0.98;
+            // Use the updated max-height from CSS
+            const maxHeight = window.innerHeight * 0.85;
             const aspectRatio = 16 / 9;
             let newWidth = maxWidth;
             let newHeight = newWidth / aspectRatio;
@@ -335,8 +332,13 @@
                 newHeight = maxHeight;
                 newWidth = newHeight * aspectRatio;
             }
+            // Ensure minimum size
+            newWidth = Math.max(320, newWidth); // Example minimum width
+            newHeight = Math.max(180, newHeight); // Example minimum height based on aspect ratio
+
             canvas.width = Math.floor(newWidth);
             canvas.height = Math.floor(newHeight);
+
              if (bubbles.length > 0 && gameActive) {
                 drawBubbles();
             }
@@ -344,6 +346,18 @@
 
         function initBubbles() {
             bubbles = [];
+            // --- Calculate dynamic bubble count ---
+            const area = canvas.width * canvas.height;
+            const densityFactor = 0.8 / 10000;
+            const totalBubbles = Math.floor(area * densityFactor);
+            const totalEvenBubbles = totalBubbles % 2 === 0 ? totalBubbles : Math.max(0, totalBubbles - 1); // Ensure non-negative
+            let numBubblesPerColor = totalEvenBubbles / 2;
+
+            // Apply Min/Max caps
+            numBubblesPerColor = Math.max(5, Math.min(25, numBubblesPerColor));
+            console.log(`Canvas Area: ${area.toFixed(0)}, Bubbles per color: ${numBubblesPerColor}`);
+
+            // --- Create bubbles ---
             for (let i = 0; i < numBubblesPerColor; i++) {
                 const x = Math.random() * (canvas.width - 2 * bubbleRadius) + bubbleRadius;
                 const y = Math.random() * (canvas.height - 2 * bubbleRadius) + bubbleRadius;
@@ -383,7 +397,7 @@
             if (!targetColor || !gameActive) return;
             const remainingTargetBubbles = bubbles.filter(bubble => bubble.color === targetColor && !bubble.popped).length;
             messageArea.textContent = `Pop ${targetColor}! Left: ${remainingTargetBubbles}`;
-            if (remainingTargetBubbles === 0) {
+            if (remainingTargetBubbles === 0 && bubbles.length > 0) {
                 endGame(true);
             }
         }
@@ -467,28 +481,28 @@
                     bubbleHit = true;
                     if (bubble.color === targetColor) {
                         bubble.popped = true;
-                        playPositiveSound(); // Plays sound and triggers haptics
+                        playPositiveSound();
                         checkWinCondition();
                     } else {
-                        playBuzzerSound(); // Plays sound and triggers haptics
+                        playBuzzerSound();
                     }
                     break;
                 }
             }
 
             if (!bubbleHit) {
-                playBuzzerSound(); // Plays sound and triggers haptics for miss
+                playBuzzerSound();
             }
         });
 
         window.addEventListener('resize', resizeCanvas);
 
+
         // --- Initial Setup ---
         window.onload = () => {
-            resizeCanvas();
+            resizeCanvas(); // Initial sizing
             messageArea.textContent = 'Choose a color to pop!';
             timerArea.textContent = 'Time: 0.0s';
-            // Check for vibrate support (optional logging)
             if (!navigator.vibrate) {
                 console.log("Vibration API not supported on this browser/device.");
             }
