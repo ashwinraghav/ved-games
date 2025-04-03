@@ -181,7 +181,8 @@
         let gameActive = false;
         const bubbleRadius = 15;
         const bubbleSpeed = 1;
-        const clickRadiusBuffer = 4; // Pixels to add to click radius for easier popping
+        // Increased buffer for even easier popping
+        const clickRadiusBuffer = 8; // Was 4. Pixels to add to click radius.
 
         // Timer variables
         let timerInterval = null;
@@ -285,6 +286,7 @@
                 if (this.popped) return false;
                 const distance = Math.sqrt(Math.pow(clickX - this.x, 2) + Math.pow(clickY - this.y, 2));
                 // Check if distance is within the visual radius PLUS the buffer
+                // Increased buffer makes clicking easier
                 return distance < (this.radius + clickRadiusBuffer);
             }
         }
