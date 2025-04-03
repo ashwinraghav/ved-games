@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comet Alphabet Pop</title>
-    <link href="https://fonts.googleapis.com/css2?family=Monospace&display=swap" rel="stylesheet">
+    <title>Comet Character Pop</title> <link href="https://fonts.googleapis.com/css2?family=Monospace&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -112,10 +111,11 @@
             box-shadow: 0 0 10px #fff, 0 0 15px #add8e6; /* Glow effect */
             transform-origin: 10% 50%; /* Rotate around the head */
             pointer-events: none; /* Comets shouldn't block clicks */
-            z-index: 1; /* Below alphabets */
+            z-index: 1; /* Below targets */
         }
 
-        .alphabet {
+        /* Renamed class in comments, kept class name for simplicity */
+        .alphabet { /* Represents clickable letters OR numbers */
             position: absolute;
             font-size: 24px;
             font-weight: bold;
@@ -141,27 +141,45 @@
             pointer-events: none; /* Can't click again */
         }
 
+        /* Enhanced Game Complete Screen (#message-box) */
         #message-box {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
+            /* Start slightly scaled down and transparent */
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+            background-color: rgba(0, 0, 0, 0.85); /* Slightly more opaque */
             color: #00ff00; /* Bright green */
-            padding: 30px 40px;
+            padding: 35px 45px; /* Slightly increased padding */
             border-radius: 10px;
-            font-size: 2em;
+            font-size: 2.2em; /* Slightly larger font */
             text-align: center;
-            display: none; /* Hidden initially */
             border: 2px solid #00ff00;
-            box-shadow: 0 0 15px #00ff00;
+            box-shadow: 0 0 20px #00ff00; /* Enhanced glow */
             z-index: 100; /* Ensure it's on top of game elements */
+            pointer-events: none; /* Prevent interaction while hidden */
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out; /* Transition for appearance */
+        }
+
+        /* Style for when the message box is visible */
+        #message-box:not(.hidden) {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1); /* Scale to full size */
+            pointer-events: auto; /* Allow interaction when visible */
+        }
+
+        #message-box #message-text {
+            display: block; /* Ensure span takes block */
+            margin-bottom: 15px; /* Space between text and button */
+            font-weight: bold;
+            text-shadow: 0 0 8px #00ff00; /* Add text glow */
         }
 
         #message-box button {
             margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 0.8em;
+            padding: 12px 24px; /* Slightly larger button */
+            font-size: 0.7em; /* Adjust relative to box font size */
             cursor: pointer;
             background-color: #00cc00;
             color: #000;
@@ -176,9 +194,10 @@
             background-color: #00ff00;
         }
 
-        /* Helper class to hide elements */
+        /* Helper class to hide elements (used for initial state) */
         .hidden {
             display: none !important;
+            /* Or use visibility: hidden; opacity: 0; if display:none causes issues */
         }
 
     </style>
@@ -189,10 +208,8 @@
             </div>
 
         <div id="intro-screen">
-            <h1>Comet Alphabet Pop!</h1>
-            <p>Welcome, space explorer!</p>
-            <p>Comets are flying by. Find and click on the letters floating in space before they're all gone!</p>
-            <p class="tip">Tip for Parents: Encourage your child to find a specific letter on the board</p>
+            <h1>Comet Character Pop!</h1> <p>Welcome, space explorer!</p>
+            <p>Comets are flying by. Find and click on the letters and numbers floating in space!</p> <p class="tip">Tip for Parents: Encourage your child to find a specific letter or number on the board</p>
             <button id="start-button">Start Game</button>
         </div>
 
@@ -212,9 +229,10 @@
         const startButton = document.getElementById('start-button');
 
         const numComets = 10; // Number of comets
-        const fullAlphabetString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // All possible letters
-        let currentAlphabetString = ""; // The letters actually used in this round
-        let remainingAlphabets = 0; // Will be set based on screen size
+        // Updated: Now includes letters and numbers
+        const targetCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let currentTargets = ""; // The characters actually used in this round
+        let remainingTargets = 0; // Updated variable name
         let comets = []; // Array to hold comet data
         let animationFrameId = null; // To control the game loop
 
@@ -295,43 +313,48 @@
             cometData.element.style.transform = `rotate(${cometData.angle}deg)`;
         }
 
-        // --- Alphabet Functions ---
+        // --- Target Functions (Letters/Numbers) ---
 
         /**
-         * Creates a single alphabet element at a random position.
+         * Creates a single target (letter or number) element at a random position.
+         * Kept original function name 'createAlphabet' and CSS class '.alphabet' for simplicity,
+         * but it now handles both letters and numbers.
+         * @param {string} char - The character (letter or number).
          */
-        function createAlphabet(char) {
-            const alphabetElement = document.createElement('div');
-            alphabetElement.classList.add('alphabet');
-            alphabetElement.textContent = char;
+        function createAlphabet(char) { // Note: Handles both letters and numbers now
+            const targetElement = document.createElement('div');
+            targetElement.classList.add('alphabet'); // Using same class for styling
+            targetElement.textContent = char;
 
             const containerRect = gameContainer.getBoundingClientRect();
             const buffer = 30;
-            alphabetElement.style.left = `${getRandom(buffer, Math.max(buffer, containerRect.width - buffer))}px`;
-            alphabetElement.style.top = `${getRandom(buffer, Math.max(buffer, containerRect.height - buffer))}px`;
+            targetElement.style.left = `${getRandom(buffer, Math.max(buffer, containerRect.width - buffer))}px`;
+            targetElement.style.top = `${getRandom(buffer, Math.max(buffer, containerRect.height - buffer))}px`;
 
-            alphabetElement.addEventListener('click', () => {
-                if (!alphabetElement.classList.contains('popped')) {
-                    alphabetElement.classList.add('popped');
-                    remainingAlphabets--;
+            // Add click listener to pop the target
+            targetElement.addEventListener('click', () => {
+                if (!targetElement.classList.contains('popped')) {
+                    targetElement.classList.add('popped');
+                    remainingTargets--; // Use updated variable name
                     checkWinCondition();
                 }
             });
 
-            gameContainer.appendChild(alphabetElement); // Add to game container
+            gameContainer.appendChild(targetElement); // Add to game container
         }
 
         // --- Game Logic ---
 
         /**
-         * Checks if all alphabets have been popped.
+         * Checks if all targets (letters/numbers) have been popped.
          */
         function checkWinCondition() {
-            if (remainingAlphabets <= 0) {
-                messageText.textContent = "You Win!";
-                messageBox.classList.remove('hidden'); // Show win message
+            // Use updated variable name
+            if (remainingTargets <= 0) {
+                messageText.textContent = "You Win!"; // Or "Game Complete!"
+                messageBox.classList.remove('hidden'); // Make message box visible (triggers CSS transition)
                 if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
+                    cancelAnimationFrame(animationFrameId); // Stop comet animation
                     animationFrameId = null;
                 }
             }
@@ -354,7 +377,10 @@
             // Clear previous game elements from the container
             gameContainer.innerHTML = ''; // Clear container efficiently
             comets = [];
-            messageBox.classList.add('hidden'); // Ensure message box is hidden
+            messageBox.classList.add('hidden'); // Ensure message box is hidden and reset for transition
+             // Force reflow to ensure transition restarts if restarting quickly
+            void messageBox.offsetWidth;
+
 
             // Stop any existing game loop
             if (animationFrameId) {
@@ -362,43 +388,47 @@
                 animationFrameId = null;
             }
 
-            // --- Determine number of alphabets based on container width ---
-            // *** Adjusted numbers for fewer alphabets ***
+            // --- Determine number of targets based on container width ---
             const containerRect = gameContainer.getBoundingClientRect();
             const containerWidth = containerRect.width;
-            let numAlphabetsToCreate;
+            let numTargetsToCreate; // Updated variable name
 
+            // Using the same logic for number of targets based on size
             if (containerWidth < 500) {
-                numAlphabetsToCreate = 6; // Fewer for small screens
+                numTargetsToCreate = 6;
             } else if (containerWidth < 800) {
-                numAlphabetsToCreate = 10; // Fewer for medium screens
+                numTargetsToCreate = 10;
             } else {
-                numAlphabetsToCreate = 15; // Fewer for large screens
+                numTargetsToCreate = 15;
             }
 
-            // Ensure we don't request more letters than available
-            numAlphabetsToCreate = Math.min(numAlphabetsToCreate, fullAlphabetString.length);
+            // Ensure we don't request more characters than available
+            numTargetsToCreate = Math.min(numTargetsToCreate, targetCharacters.length);
 
-            // Set the actual letters and count for this round
-            currentAlphabetString = fullAlphabetString.substring(0, numAlphabetsToCreate);
-            remainingAlphabets = numAlphabetsToCreate;
-            console.log(`Container Width: ${containerWidth}, Alphabets: ${remainingAlphabets}`);
+            // --- Select random characters from the combined pool ---
+            // Shuffle the targetCharacters string and take the first numTargetsToCreate
+            let shuffledChars = targetCharacters.split('').sort(() => 0.5 - Math.random());
+            currentTargets = shuffledChars.slice(0, numTargetsToCreate).join(''); // Use shuffled subset
+
+            remainingTargets = numTargetsToCreate; // Use updated variable name
+            console.log(`Container Width: ${containerWidth}, Targets: ${remainingTargets}`);
 
             // Create comets
             for (let i = 0; i < numComets; i++) {
                 createComet();
             }
 
-            // Create alphabets
-            for (const char of currentAlphabetString) {
+            // Create targets (letters/numbers)
+            for (const char of currentTargets) {
+                // Use the existing function, which now handles both
                 createAlphabet(char);
             }
 
-            // Start the game loop only if there are alphabets to pop
-            if (remainingAlphabets > 0) {
+            // Start the game loop only if there are targets to pop
+            if (remainingTargets > 0) {
                 gameLoop();
             } else {
-                checkWinCondition(); // Handle edge case of 0 alphabets
+                checkWinCondition(); // Handle edge case of 0 targets
             }
         }
 
