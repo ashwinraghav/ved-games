@@ -179,10 +179,10 @@
         let targetColor = null;
         let animationId = null;
         let gameActive = false;
-        const bubbleRadius = 15;
-        const bubbleSpeed = 1;
-        // Increased buffer for even easier popping
-        const clickRadiusBuffer = 8; // Was 4. Pixels to add to click radius.
+        const bubbleRadius = 25; // Increased bubble size (was 15)
+        const bubbleSpeed = 1; // Keep speed the same for now
+        // Adjusted buffer slightly now that bubbles are bigger
+        const clickRadiusBuffer = 5; // Was 8. Pixels to add to click radius.
 
         // Timer variables
         let timerInterval = null;
@@ -241,7 +241,7 @@
              constructor(x, y, radius, color, dx, dy) {
                 this.x = x;
                 this.y = y;
-                this.radius = radius;
+                this.radius = radius; // Uses the larger global bubbleRadius
                 this.color = color;
                 this.dx = dx;
                 this.dy = dy;
@@ -251,6 +251,7 @@
             draw() {
                 if (this.popped) return;
                 ctx.beginPath();
+                // Use this.radius which is now larger
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 const gradient = ctx.createRadialGradient(
                     this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1,
@@ -272,6 +273,7 @@
                  if (this.popped) return;
                 this.x += this.dx;
                 this.y += this.dy;
+                // Collision uses this.radius which is now larger
                 if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
                     this.dx = -this.dx;
                     this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
@@ -285,8 +287,7 @@
             isClicked(clickX, clickY) {
                 if (this.popped) return false;
                 const distance = Math.sqrt(Math.pow(clickX - this.x, 2) + Math.pow(clickY - this.y, 2));
-                // Check if distance is within the visual radius PLUS the buffer
-                // Increased buffer makes clicking easier
+                // Check uses this.radius (larger) + clickRadiusBuffer (slightly reduced)
                 return distance < (this.radius + clickRadiusBuffer);
             }
         }
@@ -355,11 +356,13 @@
                  console.error("Canvas area is zero during initBubbles. Check resize timing.");
                  return;
             }
-            const densityFactor = 0.8 / 10000;
+            // Adjusted density slightly lower since bubbles are bigger
+            const densityFactor = 0.6 / 10000; // Was 0.8
             const targetTotalBubbles = area * densityFactor;
             const totalEvenBubbles = Math.max(0, Math.floor(targetTotalBubbles / 2) * 2);
             let numBubblesPerColor = totalEvenBubbles / 2;
 
+            // Keep same Min/Max caps for now, density adjustment might be enough
             const minBubbles = 5;
             const maxBubbles = 25;
             numBubblesPerColor = Math.max(minBubbles, Math.min(maxBubbles, numBubblesPerColor));
@@ -376,20 +379,24 @@
 
 
             // --- Create bubbles ---
+            // Use updated margin calculation based on the new bubbleRadius
+            const margin = bubbleRadius + 5; // Margin based on current radius + small gap
             for (let i = 0; i < numBubblesPerColor; i++) {
-                const x = Math.random() * (canvas.width - 2 * bubbleRadius) + bubbleRadius;
-                const y = Math.random() * (canvas.height - 2 * bubbleRadius) + bubbleRadius;
+                const x = Math.random() * (canvas.width - 2 * margin) + margin; // Use margin
+                const y = Math.random() * (canvas.height - 2 * margin) + margin; // Use margin
                 const angle = Math.random() * Math.PI * 2;
                 const dx = Math.cos(angle) * bubbleSpeed;
                 const dy = Math.sin(angle) * bubbleSpeed;
+                // Pass the global bubbleRadius to the constructor
                 bubbles.push(new Bubble(x, y, bubbleRadius, 'blue', dx, dy));
             }
             for (let i = 0; i < numBubblesPerColor; i++) {
-                 const x = Math.random() * (canvas.width - 2 * bubbleRadius) + bubbleRadius;
-                const y = Math.random() * (canvas.height - 2 * bubbleRadius) + bubbleRadius;
+                 const x = Math.random() * (canvas.width - 2 * margin) + margin; // Use margin
+                 const y = Math.random() * (canvas.height - 2 * margin) + margin; // Use margin
                 const angle = Math.random() * Math.PI * 2;
                 const dx = Math.cos(angle) * bubbleSpeed;
                 const dy = Math.sin(angle) * bubbleSpeed;
+                // Pass the global bubbleRadius to the constructor
                 bubbles.push(new Bubble(x, y, bubbleRadius, 'red', dx, dy));
             }
         }
